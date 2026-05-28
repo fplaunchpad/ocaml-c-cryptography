@@ -6,6 +6,8 @@
 
 # Compiled executables
 xor
+xor_ocaml
+
 
 # OCaml compiled files
 *.cmo
