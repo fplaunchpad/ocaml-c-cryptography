@@ -1,7 +1,7 @@
 let xor_encrypt message key =
     let key_len = String.length key in
     String.init (String.length message)
-        (fun i->
+        (fun i ->
             Char.chr(
                 (Char.code message.[i])
                 lxor
@@ -9,15 +9,26 @@ let xor_encrypt message key =
             )
         )
 
-    let () =
-        print_string("enter message:");
-        let message=read_line()in
+let () =
 
-        print_string "enter key:";
-        let key=read_line()in
+    let base =
+        "CryptographyAndFunctionalProgrammingResearch123"
+    in
 
-        let encrypted=xor_encrypt message key in
-        print_endline("encrypted message:"^encrypted);
+    let message =
+        String.concat "" (Array.to_list (Array.make 100000 base))
+    in
 
-        let decrypted=xor_encrypt encrypted key in
-        print_endline("decrypted message:"^decrypted)
+    let key = "securekey" in
+
+    let encrypted = xor_encrypt message key in
+
+    let decrypted = xor_encrypt encrypted key in
+
+    print_endline ("Message length: " ^
+        string_of_int (String.length message));
+
+    print_endline "Encryption completed";
+
+    print_endline ("Decryption correct: " ^
+        string_of_bool (message = decrypted))

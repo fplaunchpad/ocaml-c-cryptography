@@ -1,34 +1,82 @@
 #include<stdio.h>
 #include<string.h>
-//Your C encrypted output may sometimes print weird symbols or stop early because XOR can produce '\0' or non-printable bytes.
+#include<stdlib.h>
+
+void xor_encrypt(char *message,
+                 char *key,
+                 char *output,
+                 int msg_len,
+                 int key_len){
+
+    for(int i = 0; i < msg_len; i++){
+        output[i] = message[i] ^ key[i % key_len];
+    }
+}
+
 int main(){
-    char str[100], key[100];
-    printf("Enter the string to encrypt: ");
-    fgets(str, sizeof(str), stdin);
-    printf("Enter the key: ");
-    fgets(key, sizeof(key), stdin);
 
-    str[strcspn(str, "\n")] = '\0';
-    key[strcspn(key, "\n")] = '\0';
+    char base[] =
+        "CryptographyAndFunctionalProgrammingResearch123";
 
-    int str_len = strlen(str);
+    int repeat = 100000;
+
+    int base_len = strlen(base);
+
+    int total_len = repeat * base_len;
+
+    char *message = malloc(total_len);
+
+    for(int i = 0; i < repeat; i++){
+        memcpy(
+            message + i * base_len,
+            base,
+            base_len
+        );
+    }
+
+    char key[] = "securekey";
+
     int key_len = strlen(key);
-    char encrypted[100], decrypted[100];
 
-    for (int i = 0; i < str_len; i++) {
-        encrypted[i] = str[i] ^ key[i % key_len];
+    char *encrypted = malloc(total_len);
+    char *decrypted = malloc(total_len);
+
+    xor_encrypt(
+        message,
+        key,
+        encrypted,
+        total_len,
+        key_len
+    );
+
+    xor_encrypt(
+        encrypted,
+        key,
+        decrypted,
+        total_len,
+        key_len
+    );
+
+    int ok = 1;
+
+    for(int i = 0; i < total_len; i++){
+
+        if(message[i] != decrypted[i]){
+            ok = 0;
+            break;
+        }
     }
-    encrypted[str_len] = '\0';
 
-    printf("Encrypted string: %s\n", encrypted);
+    printf("Message length: %d\n", total_len);
 
-    // Decrypt the string using XOR cipher
-    for (int i = 0; i < str_len; i++) {
-        decrypted[i] = encrypted[i] ^ key[i % key_len];
-    }
-    decrypted[str_len] = '\0';
+    printf("Encryption completed\n");
 
-    printf("Decrypted string: %s\n", decrypted);
+    printf("Decryption correct: %s\n",
+           ok ? "true" : "false");
+
+    free(message);
+    free(encrypted);
+    free(decrypted);
 
     return 0;
 }
