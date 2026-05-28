@@ -1,0 +1,31 @@
+# C binaries and object files
+*.out
+*.exe
+*.o
+*.a
+
+# Compiled executables
+xor
+
+# OCaml compiled files
+*.cmo
+*.cmi
+*.cmx
+*.cmxa
+*.cmxs
+*.byte
+*.native
+
+# Dune build folder
+_build/
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
