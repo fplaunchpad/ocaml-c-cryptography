@@ -1,18 +1,24 @@
 CC = gcc
 CFLAGS = -O2 -Wall -Wextra
 
-TARGET = xor
-SRC = xor_cipher.c
+XOR_TARGET = xor
+AES_TARGET = aes
 
-all: $(TARGET)
+all: $(XOR_TARGET) $(AES_TARGET)
 
-$(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
+$(XOR_TARGET): xor_cipher.c
+	$(CC) $(CFLAGS) xor_cipher.c -o $(XOR_TARGET)
+
+$(AES_TARGET): aes.c
+	$(CC) $(CFLAGS) aes.c -o $(AES_TARGET)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(XOR_TARGET) $(AES_TARGET)
 
-run: $(TARGET)
-	./$(TARGET)
+run-xor: $(XOR_TARGET)
+	./$(XOR_TARGET)
 
-.PHONY: all clean run
+run-aes: $(AES_TARGET)
+	./$(AES_TARGET)
+
+.PHONY: all clean run-xor run-aes
