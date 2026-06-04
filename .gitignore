@@ -5,8 +5,11 @@
 *.a
 
 # Compiled executables
-xor
-xor_ocaml
+c/xor
+c/aes
+c/benchmark_aes
+ocaml/xor_ocaml
+ocaml/aes_cryptokit
 
 
 # OCaml compiled files
@@ -31,3 +34,4 @@ _build/
 
 # OS files
 .DS_Store
+Thumbs.db
