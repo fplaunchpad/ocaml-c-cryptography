@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")/../c" || exit
+
 gcc -O3 -march=native benchmark.c xor.c -o benchmark
 
 for file in \

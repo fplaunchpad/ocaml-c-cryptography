@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd "$(dirname "$0")/../ocaml" || exit
+
 dune build
 
 for file in \
@@ -9,8 +11,6 @@ for file in \
 do
     echo "================================="
     echo "Testing: $file"
-
     dune exec ./benchmark.exe -- "$file"
-
     echo
 done
