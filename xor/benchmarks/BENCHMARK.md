@@ -192,6 +192,54 @@ results/results.csv
 
 ---
 
+## Why Was C Faster?
+
+Several factors contributed to C achieving higher throughput than OCaml in this benchmark:
+
+### 1. Lower Runtime Overhead
+
+C code is compiled directly to native machine instructions with minimal runtime support.
+
+OCaml programs execute within the OCaml runtime system, which introduces additional overhead.
+
+### 2. Memory Allocation Costs
+
+The C implementation allocates buffers once and reuses them during encryption and decryption.
+
+The OCaml implementation creates new byte buffers during benchmark execution, resulting in additional allocation overhead.
+
+### 3. Garbage Collection
+
+C gives explicit control over memory management.
+
+OCaml uses automatic garbage collection, which simplifies programming but can introduce additional runtime work.
+
+### 4. Direct Byte-Level Operations
+
+The C implementation performs XOR operations directly on raw memory buffers.
+
+Although OCaml's `Bytes` module is efficient, accessing and manipulating data still involves runtime checks and abstractions.
+
+### 5. Compiler Optimizations
+
+The C benchmark was compiled using:
+
+```text
+gcc -O3 -march=native
+```
+
+which enables aggressive optimization and processor-specific instruction generation.
+
+These optimizations significantly improve throughput.
+
+### Summary
+
+The benchmark results indicate that C achieved approximately two times higher throughput than OCaml for the XOR cipher on the tested workloads.
+
+The performance difference is primarily due to runtime overhead, memory allocation behavior, garbage collection, and compiler optimizations rather than differences in the XOR algorithm itself.
+
+---
+
 ## Challenges Encountered
 
 * Initial benchmark inputs were stored in Git and exceeded GitHub's file size limits.
