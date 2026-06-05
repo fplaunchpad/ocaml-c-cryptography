@@ -1,0 +1,41 @@
+# C binaries
+benchmark
+*.out
+*.exe
+
+# Build directories
+_build/
+dist/
+build/
+
+# OCaml
+*.cmi
+*.cmo
+*.cmx
+*.o
+*.a
+*.cma
+*.cmxa
+*.annot
+*.byte
+*.native
+.dune/
+
+# Benchmark inputs
+benchmarks/input_*.txt
+
+# Generated benchmark outputs
+benchmarks/ciphertext.bin
+benchmarks/decrypted.txt
+
+# Secret key
+benchmarks/key.txt
+
+# Editor files
+*~
+*.swp
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
