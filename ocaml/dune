@@ -1,2 +1,0 @@
-(executable
- (name xor_cipher))
