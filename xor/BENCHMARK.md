@@ -170,15 +170,15 @@ results/results.csv
 
 ### Encryption Throughput
 
-![Encryption Throughput](results/encryption_speed.png)
+![Encryption Throughput](benchmarks/results/encryption_speed.png)
 
 ### Decryption Throughput
 
-![Decryption Throughput](results/decryption_speed.png)
+![Decryption Throughput](benchmarks/results/decryption_speed.png)
 
 ### Execution Time
 
-![Execution Time](results/execution_time.png)
+![Execution Time](benchmarks/results/execution_time.png)
 
 ---
 
