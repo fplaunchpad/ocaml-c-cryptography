@@ -1,0 +1,4 @@
+(executable
+ (name benchmark_manual)
+ (modules benchmark_manual aes_manual)
+ (libraries unix))
