@@ -1,6 +1,5 @@
 # C binaries
-benchmark_manual
-benchmark_cryptokit
+benchmark_rijndael
 *.out
 *.exe
 
