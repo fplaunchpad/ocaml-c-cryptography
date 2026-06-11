@@ -42,6 +42,18 @@ All benchmarks were executed on the same machine using identical input files and
 
 ---
 
+## Benchmark Environment
+
+- Execution Environment: Ubuntu 24.04.4 LTS (WSL2)
+- Compiler: GCC 13.3.0
+- OCaml Version: 5.4.1
+- Processor: 12th Gen Intel(R) Core(TM) i5-1240P
+- CPU Cores: 8 Physical Cores, 16 Threads
+- AES Variant: Rijndael AES-128
+- Block Size: 128 bits
+- Key Size: 128 bits
+
+---
 ## Benchmark Results
 
 ### C Implementation
@@ -107,6 +119,35 @@ These graphs visually compare execution time and throughput across input sizes.
 
 ---
 
+## Graphs
+
+The following graphs were generated from the benchmark results to compare the performance of the C and OCaml RIJNDAEL AES-128 implementations.
+
+### Encryption Throughput
+
+![Encryption Throughput](benchmarks/results/encryption_speed_comparison.png)
+
+This graph compares the encryption throughput (MB/s) of the C and OCaml implementations across all tested input sizes.
+
+### Decryption Throughput
+
+![Decryption Throughput](benchmarks/results/decryption_speed_comparison.png)
+
+This graph compares the decryption throughput (MB/s) of the C and OCaml implementations across all tested input sizes.
+
+### Encryption Time
+
+![Encryption Time](benchmarks/results/encryption_time_comparison.png)
+
+This graph shows the encryption time required by the C and OCaml implementations for input sizes ranging from 1 MB to 100 MB.
+
+### Decryption Time
+
+![Decryption Time](benchmarks/results/decryption_time_comparison.png)
+
+This graph shows the decryption time required by the C and OCaml implementations for input sizes ranging from 1 MB to 100 MB.
+
+---
 ## Validation Process
 
 The OCaml implementation was validated using:
@@ -158,6 +199,28 @@ Translated components include:
 * Byte extraction helpers
 * Round-key manipulation helpers
 
+### Table-Based Optimization
+
+The implementation uses precomputed lookup tables to accelerate AES operations.
+
+Encryption uses:
+
+- Te0
+- Te1
+- Te2
+- Te3
+- Te4
+
+Decryption uses:
+
+- Td0
+- Td1
+- Td2
+- Td3
+- Td4
+
+These tables combine SubBytes, ShiftRows, and MixColumns transformations into efficient lookup operations, significantly improving performance compared to a naive AES implementation.
+
 ---
 
 ## Why Is OCaml Slower?
@@ -174,7 +237,7 @@ The OCaml implementation executes inside the OCaml runtime system, introducing a
 
 OCaml uses automatic memory management.
 
-Although the benchmark attempts to minimize allocations, garbage collection still introduces overhead that does not exist in the C implementation.
+The benchmark performs additional memory allocations during block processing, which can increase garbage collection activity and contribute to runtime overhead compared to the C implementation.
 
 ### Array Bounds Checking
 
@@ -217,4 +280,4 @@ Results show:
 * Throughput of approximately 34–37 MB/s in OCaml
 * Throughput of approximately 160–170 MB/s in C
 
-Overall, the OCaml implementation is approximately 4.5–5× slower than the optimized C implementation while maintaining functional equivalence.
+Overall, the OCaml implementation is approximately 4.5–5× slower than the optimized C implementation while producing identical encryption and decryption results. The study demonstrates the trade-off between the low-level performance of C and the safety and abstraction provided by OCaml.

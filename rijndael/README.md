@@ -72,8 +72,8 @@ Metrics collected:
 rijndael/
 ├── c/
 │   ├── rijndael-alg-fst.c
-│   ├── benchmark.c
-│   └── ...
+│   ├── benchmark_rijndael.c
+│   └── rijndael-alg-fst.h
 │
 ├── ocaml/
 │   ├── rijndael_fst.ml
@@ -85,22 +85,11 @@ rijndael/
 │   └── run_rijndael_ocaml.sh
 │
 ├── benchmarks/
-│   ├── input_1mb.txt
-│   ├── input_10mb.txt
-│   ├── input_30mb.txt
-│   ├── input_50mb.txt
-│   ├── input_75mb.txt
-│   ├── input_100mb.txt
-│   │
-│   ├── results/
-│   │   ├── results_rijndael_c.csv
-│   │   └── results_rijndael_ocaml.csv
-│   │
-│   └── graphs/
-│       ├── encryption_time_comparison.png
-│       ├── decryption_time_comparison.png
-│       ├── encryption_speed_comparison.png
-│       └── decryption_speed_comparison.png
+│   ├── generate_inputs.py
+│   └── results/
+│       ├── results_rijndael_c.csv
+│       ├── results_rijndael_ocaml.csv
+│       └── graphs.py
 │
 └── README.md
 ```
@@ -151,6 +140,15 @@ Generated outputs:
 * decryption_time_comparison.png
 * encryption_speed_comparison.png
 * decryption_speed_comparison.png
+
+---
+
+## Generating Benchmark Inputs
+
+Benchmark input files can be generated using:
+
+```bash
+python3 benchmarks/generate_inputs.py
 
 ---
 
