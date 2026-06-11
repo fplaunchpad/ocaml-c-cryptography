@@ -1,0 +1,53 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+c = pd.read_csv("results_rijndael_c.csv")
+ocaml = pd.read_csv("results_rijndael_ocaml.csv")
+
+sizes = c["size_mb"]
+
+plt.figure(figsize=(8,5))
+plt.plot(sizes, c["enc_time"], marker="o", label="C")
+plt.plot(sizes, ocaml["enc_time"], marker="o", label="OCaml")
+plt.xlabel("Input Size (MB)")
+plt.ylabel("Encryption Time (s)")
+plt.title("Rijndael AES-128 Encryption Time")
+plt.legend()
+plt.grid(True)
+plt.savefig("encryption_time_comparison.png")
+plt.close()
+
+plt.figure(figsize=(8,5))
+plt.plot(sizes, c["dec_time"], marker="o", label="C")
+plt.plot(sizes, ocaml["dec_time"], marker="o", label="OCaml")
+plt.xlabel("Input Size (MB)")
+plt.ylabel("Decryption Time (s)")
+plt.title("Rijndael AES-128 Decryption Time")
+plt.legend()
+plt.grid(True)
+plt.savefig("decryption_time_comparison.png")
+plt.close()
+
+plt.figure(figsize=(8,5))
+plt.plot(sizes, c["enc_speed"], marker="o", label="C")
+plt.plot(sizes, ocaml["enc_speed"], marker="o", label="OCaml")
+plt.xlabel("Input Size (MB)")
+plt.ylabel("Throughput (MB/s)")
+plt.title("Rijndael AES-128 Encryption Throughput")
+plt.legend()
+plt.grid(True)
+plt.savefig("encryption_speed_comparison.png")
+plt.close()
+
+plt.figure(figsize=(8,5))
+plt.plot(sizes, c["dec_speed"], marker="o", label="C")
+plt.plot(sizes, ocaml["dec_speed"], marker="o", label="OCaml")
+plt.xlabel("Input Size (MB)")
+plt.ylabel("Throughput (MB/s)")
+plt.title("Rijndael AES-128 Decryption Throughput")
+plt.legend()
+plt.grid(True)
+plt.savefig("decryption_speed_comparison.png")
+plt.close()
+
+print("Graphs generated successfully")
