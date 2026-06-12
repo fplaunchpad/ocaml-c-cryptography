@@ -1,4 +1,4 @@
-(executable
- (name benchmark_rijndael)
- (modules rijndael_fst benchmark_rijndael)
+(executables
+ (names benchmark_rijndael benchmark_rijndael_opt)
+ (modules rijndael_fst rijndael_fst_opt benchmark_rijndael benchmark_rijndael_opt)
  (libraries unix))

@@ -16,7 +16,7 @@ _build/
 *.byte
 *.native
 .dune/
-
+temp.txt
 # Benchmark inputs
 benchmarks/input_*.txt
 
