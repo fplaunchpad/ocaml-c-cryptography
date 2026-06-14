@@ -1,0 +1,8 @@
+optimization,enc_speed
+Original OCaml,24.27
+Buffer Reuse,27.32
+Inline round_word,50.31
+Inline final_round_word,78.27
+Inline inv_round_word,51.84
+Inline inv_final_round_word,64.29
+Remove Block Copies,73.92

@@ -4,7 +4,7 @@
 
 This project compares implementations of cryptographic primitives across different languages, with a focus on performance and implementation techniques.
 
-The current phase focuses on Rijndael AES-128.
+The current phase focuses on Rijndael AES-128, including implementation, benchmarking, correctness validation, and performance optimization of an OCaml translation of the reference C implementation.
 
 The repository contains:
 
@@ -13,6 +13,8 @@ The repository contains:
 * Benchmark automation scripts
 * Result generation
 * Performance analysis
+* Optimized OCaml implementation
+* Optimization benchmark results
 
 ---
 
@@ -77,20 +79,26 @@ rijndael/
 │
 ├── ocaml/
 │   ├── rijndael_fst.ml
+│   ├── rijndael_fst_opt.ml
 │   ├── benchmark_rijndael.ml
+│   ├── benchmark_rijndael_opt.ml
 │   └── dune
 │
 ├── scripts/
 │   ├── run_rijndael_c.sh
 │   └── run_rijndael_ocaml.sh
+│   └── scripts_opt/
+│       ├── run_rijndael_c.sh
+│       ├── run_rijndael_ocaml.sh
+│       └── run_rijndael_ocaml_opt.sh
 │
 ├── benchmarks/
 │   ├── generate_inputs.py
-│   └── results/
-│       ├── results_rijndael_c.csv
-│       ├── results_rijndael_ocaml.csv
-│       └── graphs.py
+│   ├── results/
+│   └── results_opt/
 │
+├── BENCHMARK.md
+├── BENCHMARK_OPT.md
 └── README.md
 ```
 
@@ -128,10 +136,28 @@ benchmarks/results/results_rijndael_ocaml.csv
 
 ---
 
+### Optimized Benchmark Suite
+
+```bash
+cd scripts/scripts_opt
+
+./run_rijndael_c.sh
+./run_rijndael_ocaml.sh
+./run_rijndael_ocaml_opt.sh
+```
+
+Results:
+
+```text
+benchmarks/results_opt/
+```
+
+---
+
 ## Generating Graphs
 
 ```bash
-python3 generate_graphs.py
+python3 graphs.py
 ```
 
 Generated outputs:
@@ -149,6 +175,7 @@ Benchmark input files can be generated using:
 
 ```bash
 python3 benchmarks/generate_inputs.py
+```
 
 ---
 
@@ -158,7 +185,16 @@ Correctness is verified using:
 
 * AES-128 test vectors
 * Cross-validation against the C implementation
-* Encryption/decryption round-trip testing
+* Encryption/decryption round-trip validation on benchmark inputs
+* Verification of inputs whose lengths are not multiples of 16 bytes using temporary padding-based tests
+* Cross-validation between original and optimized OCaml implementations
+
+---
+
+## Benchmark Reports
+
+- BENCHMARK.md – Baseline comparison between the reference C implementation and the original OCaml implementation.
+- BENCHMARK_OPT.md – Optimization study documenting performance improvements, validation methodology, and final comparison between C, original OCaml, and optimized OCaml implementations.
 
 ---
 
@@ -166,12 +202,15 @@ Correctness is verified using:
 
 Completed:
 
-* AES-128 translation
-* Key schedule
-* Encryption
-* Decryption
+* AES-128 translation from C to OCaml
+* Encryption and decryption support
+* Key expansion
+* AES test vector validation
+* Cross-validation against C implementation
 * Benchmark automation
-* Result generation
+* Performance analysis
+* OCaml optimization study
+* Result and graph generation
 
 Planned:
 
@@ -182,13 +221,9 @@ Planned:
 
 ---
 
-## Key Result
+## Results Summary
 
-Average throughput observed:
+Detailed benchmark results, optimization history, graphs, and analysis are available in:
 
-| Implementation | Encryption Throughput |
-| -------------- | --------------------- |
-| C              | ~164 MB/s             |
-| OCaml          | ~34 MB/s              |
-
-The OCaml implementation achieves approximately 20-25% of the throughput of the optimized C implementation while preserving functional correctness.
+- BENCHMARK.md
+- BENCHMARK_OPT.md

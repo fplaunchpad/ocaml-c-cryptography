@@ -984,6 +984,171 @@ put_u32 ciphertext 12 s3f;
 
 ciphertext
 
+let encrypt_block_off rk nr plaintext p_off ciphertext c_off =
+
+  let s0 = ref (Int32.logxor (get_u32 plaintext p_off) rk.(0)) in
+  let s1 = ref (Int32.logxor (get_u32 plaintext (p_off + 4)) rk.(1)) in
+  let s2 = ref (Int32.logxor (get_u32 plaintext (p_off + 8)) rk.(2)) in
+  let s3 = ref (Int32.logxor (get_u32 plaintext (p_off + 12)) rk.(3)) in
+
+  let t0 = ref 0l in
+  let t1 = ref 0l in
+  let t2 = ref 0l in
+  let t3 = ref 0l in
+
+  let r = ref (nr / 2) in
+  let rk_pos = ref 0 in
+
+  while !r > 0 do begin
+    t0 :=
+      Int32.logxor
+        te0.(byte !s0 24)
+        (Int32.logxor
+          te1.(byte !s1 16)
+          (Int32.logxor
+              te2.(byte !s2 8)
+              (Int32.logxor
+                te3.(byte !s3 0)
+                rk.(!rk_pos + 4))));
+
+    t1 :=
+      Int32.logxor
+        te0.(byte !s1 24)
+        (Int32.logxor
+          te1.(byte !s2 16)
+          (Int32.logxor
+              te2.(byte !s3 8)
+              (Int32.logxor
+                te3.(byte !s0 0)
+                rk.(!rk_pos + 5))));
+
+    t2 :=
+      Int32.logxor
+        te0.(byte !s2 24)
+        (Int32.logxor
+          te1.(byte !s3 16)
+          (Int32.logxor
+              te2.(byte !s0 8)
+              (Int32.logxor
+                te3.(byte !s1 0)
+                rk.(!rk_pos + 6))));
+
+    t3 :=
+      Int32.logxor
+        te0.(byte !s3 24)
+        (Int32.logxor
+          te1.(byte !s0 16)
+          (Int32.logxor
+              te2.(byte !s1 8)
+              (Int32.logxor
+                te3.(byte !s2 0)
+                rk.(!rk_pos + 7))));
+
+    rk_pos := !rk_pos + 8;
+    decr r;
+
+    if !r > 0 then begin
+      s0 :=
+        Int32.logxor
+          te0.(byte !t0 24)
+          (Int32.logxor
+            te1.(byte !t1 16)
+            (Int32.logxor
+                te2.(byte !t2 8)
+                (Int32.logxor
+                  te3.(byte !t3 0)
+                  rk.(!rk_pos + 0))));
+
+      s1 :=
+        Int32.logxor
+          te0.(byte !t1 24)
+          (Int32.logxor
+            te1.(byte !t2 16)
+            (Int32.logxor
+                te2.(byte !t3 8)
+                (Int32.logxor
+                  te3.(byte !t0 0)
+                  rk.(!rk_pos + 1))));
+
+      s2 :=
+        Int32.logxor
+          te0.(byte !t2 24)
+          (Int32.logxor
+            te1.(byte !t3 16)
+            (Int32.logxor
+                te2.(byte !t0 8)
+                (Int32.logxor
+                  te3.(byte !t1 0)
+                  rk.(!rk_pos + 2))));
+
+      s3 :=
+        Int32.logxor
+          te0.(byte !t3 24)
+          (Int32.logxor
+            te1.(byte !t0 16)
+            (Int32.logxor
+                te2.(byte !t1 8)
+                (Int32.logxor
+                  te3.(byte !t2 0)
+                  rk.(!rk_pos + 3))));
+    end
+  end done;
+
+let s0f =
+  Int32.logxor
+    (Int32.logand te4.(byte !t0 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand te4.(byte !t1 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand te4.(byte !t2 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand te4.(byte !t3 0) 0x000000ffl)
+             rk.(!rk_pos))))
+in
+
+let s1f =
+  Int32.logxor
+    (Int32.logand te4.(byte !t1 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand te4.(byte !t2 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand te4.(byte !t3 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand te4.(byte !t0 0) 0x000000ffl)
+             rk.(!rk_pos + 1))))
+in
+
+let s2f =
+  Int32.logxor
+    (Int32.logand te4.(byte !t2 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand te4.(byte !t3 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand te4.(byte !t0 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand te4.(byte !t1 0) 0x000000ffl)
+             rk.(!rk_pos + 2))))
+in
+
+let s3f =
+  Int32.logxor
+    (Int32.logand te4.(byte !t3 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand te4.(byte !t0 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand te4.(byte !t1 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand te4.(byte !t2 0) 0x000000ffl)
+             rk.(!rk_pos + 3))))
+in
+
+put_u32 ciphertext c_off s0f;
+put_u32 ciphertext (c_off + 4) s1f;
+put_u32 ciphertext (c_off + 8) s2f;
+put_u32 ciphertext (c_off + 12) s3f;
+
+ciphertext
+
 let decrypt_block rk nr ciphertext plaintext =
   let s0 = ref (Int32.logxor (get_u32 ciphertext 0) rk.(0)) in
   let s1 = ref (Int32.logxor (get_u32 ciphertext 4) rk.(1)) in
@@ -1143,6 +1308,169 @@ put_u32 plaintext 0 s0f;
 put_u32 plaintext 4 s1f;
 put_u32 plaintext 8 s2f;
 put_u32 plaintext 12 s3f;
+
+plaintext
+
+let decrypt_block_off rk nr ciphertext c_off plaintext p_off =
+
+  let s0 = ref (Int32.logxor (get_u32 ciphertext c_off) rk.(0)) in
+  let s1 = ref (Int32.logxor (get_u32 ciphertext (c_off + 4)) rk.(1)) in
+  let s2 = ref (Int32.logxor (get_u32 ciphertext (c_off + 8)) rk.(2)) in
+  let s3 = ref (Int32.logxor (get_u32 ciphertext (c_off + 12)) rk.(3)) in
+
+  let t0 = ref 0l in
+  let t1 = ref 0l in
+  let t2 = ref 0l in
+  let t3 = ref 0l in
+
+  let r = ref (nr / 2) in
+  let rk_pos = ref 0 in
+  while !r > 0 do begin
+    t0 :=
+      Int32.logxor
+        td0.(byte !s0 24)
+        (Int32.logxor
+          td1.(byte !s3 16)
+          (Int32.logxor
+              td2.(byte !s2 8)
+              (Int32.logxor
+                td3.(byte !s1 0)
+                rk.(!rk_pos + 4))));
+
+    t1 :=
+      Int32.logxor
+        td0.(byte !s1 24)
+        (Int32.logxor
+          td1.(byte !s0 16)
+          (Int32.logxor
+              td2.(byte !s3 8)
+              (Int32.logxor
+                td3.(byte !s2 0)
+                rk.(!rk_pos + 5))));
+
+    t2 :=
+      Int32.logxor
+        td0.(byte !s2 24)
+        (Int32.logxor
+          td1.(byte !s1 16)
+          (Int32.logxor
+              td2.(byte !s0 8)
+              (Int32.logxor
+                td3.(byte !s3 0)
+                rk.(!rk_pos + 6))));
+
+    t3 :=
+      Int32.logxor
+        td0.(byte !s3 24)
+        (Int32.logxor
+          td1.(byte !s2 16)
+          (Int32.logxor
+              td2.(byte !s1 8)
+              (Int32.logxor
+                td3.(byte !s0 0)
+                rk.(!rk_pos + 7))));
+
+  rk_pos := !rk_pos + 8;
+  decr r;
+
+  if !r > 0 then begin
+    s0 :=
+      Int32.logxor
+        td0.(byte !t0 24)
+        (Int32.logxor
+          td1.(byte !t3 16)
+          (Int32.logxor
+              td2.(byte !t2 8)
+              (Int32.logxor
+                td3.(byte !t1 0)
+                rk.(!rk_pos))));
+
+    s1 :=
+      Int32.logxor
+        td0.(byte !t1 24)
+        (Int32.logxor
+          td1.(byte !t0 16)
+          (Int32.logxor
+              td2.(byte !t3 8)
+              (Int32.logxor
+                td3.(byte !t2 0)
+                rk.(!rk_pos + 1))));
+
+    s2 :=
+      Int32.logxor
+        td0.(byte !t2 24)
+        (Int32.logxor
+          td1.(byte !t1 16)
+          (Int32.logxor
+              td2.(byte !t0 8)
+              (Int32.logxor
+                td3.(byte !t3 0)
+                rk.(!rk_pos + 2))));
+
+    s3 :=
+      Int32.logxor
+        td0.(byte !t3 24)
+        (Int32.logxor
+          td1.(byte !t2 16)
+          (Int32.logxor
+              td2.(byte !t1 8)
+              (Int32.logxor
+                td3.(byte !t0 0)
+                rk.(!rk_pos + 3))));
+  end
+end done;
+let s0f =
+  Int32.logxor
+    (Int32.logand td4.(byte !t0 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand td4.(byte !t3 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand td4.(byte !t2 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand td4.(byte !t1 0) 0x000000ffl)
+             rk.(!rk_pos))))
+in
+
+let s1f =
+  Int32.logxor
+    (Int32.logand td4.(byte !t1 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand td4.(byte !t0 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand td4.(byte !t3 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand td4.(byte !t2 0) 0x000000ffl)
+             rk.(!rk_pos + 1))))
+in
+
+let s2f =
+  Int32.logxor
+    (Int32.logand td4.(byte !t2 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand td4.(byte !t1 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand td4.(byte !t0 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand td4.(byte !t3 0) 0x000000ffl)
+             rk.(!rk_pos + 2))))
+in
+
+let s3f =
+  Int32.logxor
+    (Int32.logand td4.(byte !t3 24) 0xff000000l)
+    (Int32.logxor
+       (Int32.logand td4.(byte !t2 16) 0x00ff0000l)
+       (Int32.logxor
+          (Int32.logand td4.(byte !t1 8) 0x0000ff00l)
+          (Int32.logxor
+             (Int32.logand td4.(byte !t0 0) 0x000000ffl)
+             rk.(!rk_pos + 3))))
+in
+
+put_u32 plaintext p_off s0f;
+put_u32 plaintext (p_off + 4) s1f;
+put_u32 plaintext (p_off + 8) s2f;
+put_u32 plaintext (p_off + 12) s3f;
 
 plaintext
 

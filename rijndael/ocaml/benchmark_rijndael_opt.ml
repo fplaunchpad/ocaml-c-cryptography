@@ -32,15 +32,9 @@ let benchmark_file filename =
 
   let start_time = Unix.gettimeofday () in
 
-  let block = Bytes.create 16 in
-  let out_block = Bytes.create 16 in
-
   for i = 0 to (len / 16) - 1 do
-    Bytes.blit data (i * 16) block 0 16;
-
-    ignore (encrypt_block rk nr block out_block);
-
-    Bytes.blit out_block 0 output (i * 16) 16
+    let off = i * 16 in
+    ignore (encrypt_block_off rk nr data off output off)
   done;
 
   let end_time = Unix.gettimeofday () in
@@ -55,18 +49,11 @@ let drk = Array.make 60 0l in
 let dnr = key_setup_dec drk key 128 in
 
 let recovered = Bytes.create len in
-
 let dec_start = Unix.gettimeofday () in
 
-let dec_block = Bytes.create 16 in
-let dec_out_block = Bytes.create 16 in
-
 for i = 0 to (len / 16) - 1 do
-  Bytes.blit output (i * 16) dec_block 0 16;
-
-  ignore (decrypt_block drk dnr dec_block dec_out_block);
-
-  Bytes.blit dec_out_block 0 recovered (i * 16) 16
+  let off = i * 16 in
+  ignore (decrypt_block_off drk dnr output off recovered off)
 done;
 
 let dec_end = Unix.gettimeofday () in
