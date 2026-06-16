@@ -686,37 +686,37 @@ let rcon = [|
 
 let get_u32 bytes pos =
   logxor
-    (shift_left (of_int (Char.code (Bytes.get bytes pos))) 24)
+    (shift_left (of_int (Char.code (Bytes.unsafe_get bytes pos))) 24)
     (logxor
-       (shift_left (of_int (Char.code (Bytes.get bytes (pos + 1)))) 16)
+       (shift_left (of_int (Char.code (Bytes.unsafe_get bytes (pos + 1)))) 16)
        (logxor
-          (shift_left (of_int (Char.code (Bytes.get bytes (pos + 2)))) 8)
-          (of_int (Char.code (Bytes.get bytes (pos + 3))))))
+          (shift_left (of_int (Char.code (Bytes.unsafe_get bytes (pos + 2)))) 8)
+          (of_int (Char.code (Bytes.unsafe_get bytes (pos + 3))))))
 
 let put_u32 bytes pos x =
-  Bytes.set bytes pos
-    (Char.chr
+  Bytes.unsafe_set bytes pos
+    (Char.unsafe_chr
        (to_int
           (logand
              (shift_right_logical x 24)
              0xffl)));
 
-  Bytes.set bytes (pos + 1)
-    (Char.chr
+  Bytes.unsafe_set bytes (pos + 1)
+    (Char.unsafe_chr
        (to_int
           (logand
              (shift_right_logical x 16)
              0xffl)));
 
-  Bytes.set bytes (pos + 2)
-    (Char.chr
+  Bytes.unsafe_set bytes (pos + 2)
+    (Char.unsafe_chr
        (to_int
           (logand
              (shift_right_logical x 8)
              0xffl)));
 
-  Bytes.set bytes (pos + 3)
-    (Char.chr
+  Bytes.unsafe_set bytes (pos + 3)
+    (Char.unsafe_chr
        (to_int
           (logand x 0xffl)))
 
