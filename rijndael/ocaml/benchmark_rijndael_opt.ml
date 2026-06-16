@@ -1,6 +1,7 @@
 open Rijndael_fst_opt
 
 let benchmark_file filename =
+  let gc_before = Gc.quick_stat () in
   let ic = open_in_bin filename in
   let len = in_channel_length ic in
 
@@ -84,7 +85,26 @@ Printf.printf
   elapsed
   dec_time
   enc_speed
-  dec_speed
+  dec_speed;
+
+let gc_after = Gc.quick_stat () in
+
+Printf.printf "\nGC Statistics\n";
+Printf.printf "Minor collections : %d\n"
+  (gc_after.minor_collections - gc_before.minor_collections);
+
+Printf.printf "Major collections : %d\n"
+  (gc_after.major_collections - gc_before.major_collections);
+
+Printf.printf "Minor words       : %.0f\n"
+  (gc_after.minor_words -. gc_before.minor_words);
+
+Printf.printf "Promoted words    : %.0f\n"
+  (gc_after.promoted_words -. gc_before.promoted_words);
+
+Printf.printf "Major words       : %.0f\n"
+  (gc_after.major_words -. gc_before.major_words);
+()
 
 let () =
   if Array.length Sys.argv <> 2 then begin
