@@ -26,7 +26,7 @@ let benchmark_file filename =
   really_input kf key 0 16;
   close_in kf;
 
-  let rk = Array.make 60 0l in
+  let rk = Array.make 60 0 in
   let nr = key_setup_enc rk key 128 in
 
   let output = Bytes.create len in
@@ -46,7 +46,7 @@ let benchmark_file filename =
     float_of_int original_len /. (1024.0 *. 1024.0)
   in
 
-let drk = Array.make 60 0l in
+let drk = Array.make 60 0 in
 let dnr = key_setup_dec drk key 128 in
 
 let recovered = Bytes.create len in

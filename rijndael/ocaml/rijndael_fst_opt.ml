@@ -1,5 +1,3 @@
-open Int32
-
 let te0 = [|
     0xc66363a5l; 0xf87c7c84l; 0xee777799l; 0xf67b7b8dl;
     0xfff2f20dl; 0xd66b6bbdl; 0xde6f6fb1l; 0x91c5c554l;
@@ -685,40 +683,16 @@ let rcon = [|
 |]
 
 let get_u32 bytes pos =
-  logxor
-    (shift_left (of_int (Char.code (Bytes.unsafe_get bytes pos))) 24)
-    (logxor
-       (shift_left (of_int (Char.code (Bytes.unsafe_get bytes (pos + 1)))) 16)
-       (logxor
-          (shift_left (of_int (Char.code (Bytes.unsafe_get bytes (pos + 2)))) 8)
-          (of_int (Char.code (Bytes.unsafe_get bytes (pos + 3))))))
+  (Char.code (Bytes.unsafe_get bytes pos)        lsl 24) lxor
+  (Char.code (Bytes.unsafe_get bytes (pos + 1))  lsl 16) lxor
+  (Char.code (Bytes.unsafe_get bytes (pos + 2))  lsl 8)  lxor
+   Char.code (Bytes.unsafe_get bytes (pos + 3))
 
 let put_u32 bytes pos x =
-  Bytes.unsafe_set bytes pos
-    (Char.unsafe_chr
-       (to_int
-          (logand
-             (shift_right_logical x 24)
-             0xffl)));
-
-  Bytes.unsafe_set bytes (pos + 1)
-    (Char.unsafe_chr
-       (to_int
-          (logand
-             (shift_right_logical x 16)
-             0xffl)));
-
-  Bytes.unsafe_set bytes (pos + 2)
-    (Char.unsafe_chr
-       (to_int
-          (logand
-             (shift_right_logical x 8)
-             0xffl)));
-
-  Bytes.unsafe_set bytes (pos + 3)
-    (Char.unsafe_chr
-       (to_int
-          (logand x 0xffl)))
+  Bytes.unsafe_set bytes pos       (Char.unsafe_chr ((x lsr 24) land 0xFF));
+  Bytes.unsafe_set bytes (pos + 1) (Char.unsafe_chr ((x lsr 16) land 0xFF));
+  Bytes.unsafe_set bytes (pos + 2) (Char.unsafe_chr ((x lsr 8)  land 0xFF));
+  Bytes.unsafe_set bytes (pos + 3) (Char.unsafe_chr  (x         land 0xFF))
 
 let byte x shift =
   (Int32.to_int x lsr shift) land 0xFF
@@ -749,7 +723,7 @@ let swap4 rk a b =
 
 
 let key_setup_enc rk key bits =
-  let temp = ref 0l in
+  let temp = ref 0 in
 
   rk.(0) <- get_u32 key 0;
   rk.(1) <- get_u32 key 4;
@@ -763,20 +737,14 @@ let key_setup_enc rk key bits =
     temp := rk.(4 * !i + 3);
 
     rk.(4 * !i + 4) <-
-      Int32.logxor
-        rk.(4 * !i)
-        (Int32.logxor
-          (te4_subword_rot !temp)
-          rcon.(!i));
+      rk.(4 * !i) lxor
+      Int32.to_int (Int32.logxor (te4_subword_rot (Int32.of_int !temp)) rcon.(!i));
 
-    rk.(4 * !i + 5) <-
-      Int32.logxor rk.(4 * !i + 1) rk.(4 * !i + 4);
+    rk.(4 * !i + 5) <- rk.(4 * !i + 1) lxor rk.(4 * !i + 4);
 
-    rk.(4 * !i + 6) <-
-      Int32.logxor rk.(4 * !i + 2) rk.(4 * !i + 5);
+    rk.(4 * !i + 6) <- rk.(4 * !i + 2) lxor rk.(4 * !i + 5);
 
-    rk.(4 * !i + 7) <-
-      Int32.logxor rk.(4 * !i + 3) rk.(4 * !i + 6);
+    rk.(4 * !i + 7) <- rk.(4 * !i + 3) lxor rk.(4 * !i + 6);
 
     incr i
   end done;
@@ -810,183 +778,135 @@ let key_setup_dec rk key bits =
 for round = 1 to nr - 1 do
   let base = round * 4 in
 
-  rk.(base)     <- inv_mix_key_word rk.(base);
-  rk.(base + 1) <- inv_mix_key_word rk.(base + 1);
-  rk.(base + 2) <- inv_mix_key_word rk.(base + 2);
-  rk.(base + 3) <- inv_mix_key_word rk.(base + 3);
+  rk.(base)     <- Int32.to_int (inv_mix_key_word (Int32.of_int rk.(base)));
+  rk.(base + 1) <- Int32.to_int (inv_mix_key_word (Int32.of_int rk.(base + 1)));
+  rk.(base + 2) <- Int32.to_int (inv_mix_key_word (Int32.of_int rk.(base + 2)));
+  rk.(base + 3) <- Int32.to_int (inv_mix_key_word (Int32.of_int rk.(base + 3)));
 done;
   nr
 
 let encrypt_block_off rk nr plaintext p_off ciphertext c_off =
 
-  let s0 = ref (Int32.logxor (get_u32 plaintext p_off) (Array.unsafe_get rk (0))) in
-  let s1 = ref (Int32.logxor (get_u32 plaintext (p_off + 4)) (Array.unsafe_get rk (1))) in
-  let s2 = ref (Int32.logxor (get_u32 plaintext (p_off + 8)) (Array.unsafe_get rk (2))) in
-  let s3 = ref (Int32.logxor (get_u32 plaintext (p_off + 12)) (Array.unsafe_get rk (3))) in
+  let s0 = ref (get_u32 plaintext p_off        lxor Array.unsafe_get rk 0) in
+  let s1 = ref (get_u32 plaintext (p_off + 4)  lxor Array.unsafe_get rk 1) in
+  let s2 = ref (get_u32 plaintext (p_off + 8)  lxor Array.unsafe_get rk 2) in
+  let s3 = ref (get_u32 plaintext (p_off + 12) lxor Array.unsafe_get rk 3) in
 
-  let t0 = ref 0l in
-  let t1 = ref 0l in
-  let t2 = ref 0l in
-  let t3 = ref 0l in
+  let t0 = ref 0 in
+  let t1 = ref 0 in
+  let t2 = ref 0 in
+  let t3 = ref 0 in
 
   let r = ref (nr / 2) in
   let rk_pos = ref 0 in
 
   while !r > 0 do begin
-    let vs0 = Int32.to_int !s0 in
-    let vs1 = Int32.to_int !s1 in
-    let vs2 = Int32.to_int !s2 in
-    let vs3 = Int32.to_int !s3 in
+    let vs0 = !s0 in
+    let vs1 = !s1 in
+    let vs2 = !s2 in
+    let vs3 = !s3 in
     let pos = !rk_pos in
     t0 :=
-      Int32.logxor
-        (Array.unsafe_get te0 ((vs0 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get te1 ((vs1 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get te2 ((vs2 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get te3 (vs3 land 0xFF))
-                (Array.unsafe_get rk (pos + 4)))));
+      Int32.to_int (Array.unsafe_get te0 ((vs0 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te1 ((vs1 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te2 ((vs2 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te3  (vs3          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 4);
 
     t1 :=
-      Int32.logxor
-        (Array.unsafe_get te0 ((vs1 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get te1 ((vs2 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get te2 ((vs3 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get te3 (vs0 land 0xFF))
-                (Array.unsafe_get rk (pos + 5)))));
+      Int32.to_int (Array.unsafe_get te0 ((vs1 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te1 ((vs2 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te2 ((vs3 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te3  (vs0          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 5);
 
     t2 :=
-      Int32.logxor
-        (Array.unsafe_get te0 ((vs2 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get te1 ((vs3 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get te2 ((vs0 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get te3 (vs1 land 0xFF))
-                (Array.unsafe_get rk (pos + 6)))));
+      Int32.to_int (Array.unsafe_get te0 ((vs2 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te1 ((vs3 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te2 ((vs0 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te3  (vs1          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 6);
 
     t3 :=
-      Int32.logxor
-        (Array.unsafe_get te0 ((vs3 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get te1 ((vs0 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get te2 ((vs1 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get te3 (vs2 land 0xFF))
-                (Array.unsafe_get rk (pos + 7)))));
+      Int32.to_int (Array.unsafe_get te0 ((vs3 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te1 ((vs0 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te2 ((vs1 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get te3  (vs2          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 7);
 
     rk_pos := pos + 8;
     decr r;
 
     if !r > 0 then begin
-      let vt0 = Int32.to_int !t0 in
-      let vt1 = Int32.to_int !t1 in
-      let vt2 = Int32.to_int !t2 in
-      let vt3 = Int32.to_int !t3 in
+      let vt0 = !t0 in
+      let vt1 = !t1 in
+      let vt2 = !t2 in
+      let vt3 = !t3 in
       s0 :=
-        Int32.logxor
-          (Array.unsafe_get te0 ((vt0 lsr 24) land 0xFF))
-          (Int32.logxor
-            (Array.unsafe_get te1 ((vt1 lsr 16) land 0xFF))
-            (Int32.logxor
-                (Array.unsafe_get te2 ((vt2 lsr 8) land 0xFF))
-                (Int32.logxor
-                  (Array.unsafe_get te3 (vt3 land 0xFF))
-                  (Array.unsafe_get rk (pos + 8)))));
+        Int32.to_int (Array.unsafe_get te0 ((vt0 lsr 24) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te1 ((vt1 lsr 16) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te2 ((vt2 lsr 8)  land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te3  (vt3          land 0xFF)) lxor
+        Array.unsafe_get rk  (pos + 8);
 
       s1 :=
-        Int32.logxor
-          (Array.unsafe_get te0 ((vt1 lsr 24) land 0xFF))
-          (Int32.logxor
-            (Array.unsafe_get te1 ((vt2 lsr 16) land 0xFF))
-            (Int32.logxor
-                (Array.unsafe_get te2 ((vt3 lsr 8) land 0xFF))
-                (Int32.logxor
-                  (Array.unsafe_get te3 (vt0 land 0xFF))
-                  (Array.unsafe_get rk (pos + 9)))));
+        Int32.to_int (Array.unsafe_get te0 ((vt1 lsr 24) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te1 ((vt2 lsr 16) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te2 ((vt3 lsr 8)  land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te3  (vt0          land 0xFF)) lxor
+        Array.unsafe_get rk  (pos + 9);
 
       s2 :=
-        Int32.logxor
-          (Array.unsafe_get te0 ((vt2 lsr 24) land 0xFF))
-          (Int32.logxor
-            (Array.unsafe_get te1 ((vt3 lsr 16) land 0xFF))
-            (Int32.logxor
-                (Array.unsafe_get te2 ((vt0 lsr 8) land 0xFF))
-                (Int32.logxor
-                  (Array.unsafe_get te3 (vt1 land 0xFF))
-                  (Array.unsafe_get rk (pos + 10)))));
+        Int32.to_int (Array.unsafe_get te0 ((vt2 lsr 24) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te1 ((vt3 lsr 16) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te2 ((vt0 lsr 8)  land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te3  (vt1          land 0xFF)) lxor
+        Array.unsafe_get rk  (pos + 10);
 
       s3 :=
-        Int32.logxor
-          (Array.unsafe_get te0 ((vt3 lsr 24) land 0xFF))
-          (Int32.logxor
-            (Array.unsafe_get te1 ((vt0 lsr 16) land 0xFF))
-            (Int32.logxor
-                (Array.unsafe_get te2 ((vt1 lsr 8) land 0xFF))
-                (Int32.logxor
-                  (Array.unsafe_get te3 (vt2 land 0xFF))
-                  (Array.unsafe_get rk (pos + 11)))));
+        Int32.to_int (Array.unsafe_get te0 ((vt3 lsr 24) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te1 ((vt0 lsr 16) land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te2 ((vt1 lsr 8)  land 0xFF)) lxor
+        Int32.to_int (Array.unsafe_get te3  (vt2          land 0xFF)) lxor
+        Array.unsafe_get rk  (pos + 11);
     end
   end done;
 
-let vt0 = Int32.to_int !t0 in
-let vt1 = Int32.to_int !t1 in
-let vt2 = Int32.to_int !t2 in
-let vt3 = Int32.to_int !t3 in
+let vt0 = !t0 in
+let vt1 = !t1 in
+let vt2 = !t2 in
+let vt3 = !t3 in
 let pos_f = !rk_pos in
 let s0f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get te4 ((vt0 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get te4 ((vt1 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get te4 ((vt2 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get te4 (vt3 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk pos_f))))
+  ((Int32.to_int (Array.unsafe_get te4 ((vt0 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt1 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt2 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get te4  (vt3          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk pos_f
 in
 
 let s1f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get te4 ((vt1 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get te4 ((vt2 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get te4 ((vt3 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get te4 (vt0 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 1)))))
+  ((Int32.to_int (Array.unsafe_get te4 ((vt1 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt2 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt3 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get te4  (vt0          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 1)
 in
 
 let s2f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get te4 ((vt2 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get te4 ((vt3 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get te4 ((vt0 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get te4 (vt1 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 2)))))
+  ((Int32.to_int (Array.unsafe_get te4 ((vt2 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt3 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt0 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get te4  (vt1          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 2)
 in
 
 let s3f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get te4 ((vt3 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get te4 ((vt0 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get te4 ((vt1 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get te4 (vt2 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 3)))))
+  ((Int32.to_int (Array.unsafe_get te4 ((vt3 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt0 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get te4 ((vt1 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get te4  (vt2          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 3)
 in
 
 put_u32 ciphertext c_off s0f;
@@ -998,172 +918,124 @@ ciphertext
 
 let decrypt_block_off rk nr ciphertext c_off plaintext p_off =
 
-  let s0 = ref (Int32.logxor (get_u32 ciphertext c_off) (Array.unsafe_get rk (0))) in
-  let s1 = ref (Int32.logxor (get_u32 ciphertext (c_off + 4)) (Array.unsafe_get rk (1))) in
-  let s2 = ref (Int32.logxor (get_u32 ciphertext (c_off + 8)) (Array.unsafe_get rk (2))) in
-  let s3 = ref (Int32.logxor (get_u32 ciphertext (c_off + 12)) (Array.unsafe_get rk (3))) in
+  let s0 = ref (get_u32 ciphertext c_off        lxor Array.unsafe_get rk 0) in
+  let s1 = ref (get_u32 ciphertext (c_off + 4)  lxor Array.unsafe_get rk 1) in
+  let s2 = ref (get_u32 ciphertext (c_off + 8)  lxor Array.unsafe_get rk 2) in
+  let s3 = ref (get_u32 ciphertext (c_off + 12) lxor Array.unsafe_get rk 3) in
 
-  let t0 = ref 0l in
-  let t1 = ref 0l in
-  let t2 = ref 0l in
-  let t3 = ref 0l in
+  let t0 = ref 0 in
+  let t1 = ref 0 in
+  let t2 = ref 0 in
+  let t3 = ref 0 in
 
   let r = ref (nr / 2) in
   let rk_pos = ref 0 in
   while !r > 0 do begin
-    let vs0 = Int32.to_int !s0 in
-    let vs1 = Int32.to_int !s1 in
-    let vs2 = Int32.to_int !s2 in
-    let vs3 = Int32.to_int !s3 in
+    let vs0 = !s0 in
+    let vs1 = !s1 in
+    let vs2 = !s2 in
+    let vs3 = !s3 in
     let pos = !rk_pos in
     t0 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vs0 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vs3 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vs2 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vs1 land 0xFF))
-                (Array.unsafe_get rk (pos + 4)))));
+      Int32.to_int (Array.unsafe_get td0 ((vs0 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vs3 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vs2 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vs1          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 4);
 
     t1 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vs1 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vs0 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vs3 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vs2 land 0xFF))
-                (Array.unsafe_get rk (pos + 5)))));
+      Int32.to_int (Array.unsafe_get td0 ((vs1 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vs0 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vs3 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vs2          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 5);
 
     t2 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vs2 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vs1 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vs0 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vs3 land 0xFF))
-                (Array.unsafe_get rk (pos + 6)))));
+      Int32.to_int (Array.unsafe_get td0 ((vs2 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vs1 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vs0 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vs3          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 6);
 
     t3 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vs3 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vs2 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vs1 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vs0 land 0xFF))
-                (Array.unsafe_get rk (pos + 7)))));
+      Int32.to_int (Array.unsafe_get td0 ((vs3 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vs2 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vs1 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vs0          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 7);
 
   rk_pos := pos + 8;
   decr r;
 
   if !r > 0 then begin
-    let vt0 = Int32.to_int !t0 in
-    let vt1 = Int32.to_int !t1 in
-    let vt2 = Int32.to_int !t2 in
-    let vt3 = Int32.to_int !t3 in
+    let vt0 = !t0 in
+    let vt1 = !t1 in
+    let vt2 = !t2 in
+    let vt3 = !t3 in
     s0 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vt0 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vt3 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vt2 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vt1 land 0xFF))
-                (Array.unsafe_get rk (pos + 8)))));
+      Int32.to_int (Array.unsafe_get td0 ((vt0 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vt3 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vt2 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vt1          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 8);
 
     s1 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vt1 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vt0 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vt3 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vt2 land 0xFF))
-                (Array.unsafe_get rk (pos + 9)))));
+      Int32.to_int (Array.unsafe_get td0 ((vt1 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vt0 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vt3 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vt2          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 9);
 
     s2 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vt2 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vt1 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vt0 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vt3 land 0xFF))
-                (Array.unsafe_get rk (pos + 10)))));
+      Int32.to_int (Array.unsafe_get td0 ((vt2 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vt1 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vt0 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vt3          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 10);
 
     s3 :=
-      Int32.logxor
-        (Array.unsafe_get td0 ((vt3 lsr 24) land 0xFF))
-        (Int32.logxor
-          (Array.unsafe_get td1 ((vt2 lsr 16) land 0xFF))
-          (Int32.logxor
-              (Array.unsafe_get td2 ((vt1 lsr 8) land 0xFF))
-              (Int32.logxor
-                (Array.unsafe_get td3 (vt0 land 0xFF))
-                (Array.unsafe_get rk (pos + 11)))));
+      Int32.to_int (Array.unsafe_get td0 ((vt3 lsr 24) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td1 ((vt2 lsr 16) land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td2 ((vt1 lsr 8)  land 0xFF)) lxor
+      Int32.to_int (Array.unsafe_get td3  (vt0          land 0xFF)) lxor
+      Array.unsafe_get rk  (pos + 11);
   end
 end done;
-let vt0 = Int32.to_int !t0 in
-let vt1 = Int32.to_int !t1 in
-let vt2 = Int32.to_int !t2 in
-let vt3 = Int32.to_int !t3 in
+let vt0 = !t0 in
+let vt1 = !t1 in
+let vt2 = !t2 in
+let vt3 = !t3 in
 let pos_f = !rk_pos in
 let s0f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get td4 ((vt0 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get td4 ((vt3 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get td4 ((vt2 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get td4 (vt1 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk pos_f))))
+  ((Int32.to_int (Array.unsafe_get td4 ((vt0 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt3 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt2 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get td4  (vt1          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk pos_f
 in
 
 let s1f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get td4 ((vt1 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get td4 ((vt0 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get td4 ((vt3 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get td4 (vt2 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 1)))))
+  ((Int32.to_int (Array.unsafe_get td4 ((vt1 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt0 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt3 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get td4  (vt2          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 1)
 in
 
 let s2f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get td4 ((vt2 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get td4 ((vt1 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get td4 ((vt0 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get td4 (vt3 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 2)))))
+  ((Int32.to_int (Array.unsafe_get td4 ((vt2 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt1 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt0 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get td4  (vt3          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 2)
 in
 
 let s3f =
-  Int32.logxor
-    (Int32.logand (Array.unsafe_get td4 ((vt3 lsr 24) land 0xFF)) 0xff000000l)
-    (Int32.logxor
-       (Int32.logand (Array.unsafe_get td4 ((vt2 lsr 16) land 0xFF)) 0x00ff0000l)
-       (Int32.logxor
-          (Int32.logand (Array.unsafe_get td4 ((vt1 lsr 8) land 0xFF)) 0x0000ff00l)
-          (Int32.logxor
-             (Int32.logand (Array.unsafe_get td4 (vt0 land 0xFF)) 0x000000ffl)
-             (Array.unsafe_get rk (pos_f + 3)))))
+  ((Int32.to_int (Array.unsafe_get td4 ((vt3 lsr 24) land 0xFF)) land 0xFF) lsl 24) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt2 lsr 16) land 0xFF)) land 0xFF) lsl 16) lxor
+  ((Int32.to_int (Array.unsafe_get td4 ((vt1 lsr 8)  land 0xFF)) land 0xFF) lsl 8)  lxor
+   (Int32.to_int (Array.unsafe_get td4  (vt0          land 0xFF)) land 0xFF)          lxor
+   Array.unsafe_get rk (pos_f + 3)
 in
 
 put_u32 plaintext p_off s0f;
