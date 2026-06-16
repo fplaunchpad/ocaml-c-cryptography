@@ -721,10 +721,7 @@ let put_u32 bytes pos x =
           (logand x 0xffl)))
 
 let byte x shift =
-  Int32.to_int
-    (Int32.logand
-       (Int32.shift_right_logical x shift)
-       0xffl)
+  (Int32.to_int x lsr shift) land 0xFF
 
 let te4_subword_rot temp =
   Int32.logxor
