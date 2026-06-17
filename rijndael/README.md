@@ -91,14 +91,27 @@ rijndael/
 │       ├── run_rijndael_c.sh
 │       ├── run_rijndael_ocaml.sh
 │       └── run_rijndael_ocaml_opt.sh
+├── scripts_final_opt/
+│   ├── run_c.sh
+│   └── run_ocaml.sh
 │
 ├── benchmarks/
 │   ├── generate_inputs.py
 │   ├── results/
-│   └── results_opt/
+│   ├── results_opt/
+│   └── results_final_opt/
+│       ├── ocaml_results.csv
+│       ├── c_results.csv
+│       ├── optimization_graphs/
+│       ├── gc_impact/
+│       ├── encryption_time_comparison.png
+│       ├── decryption_time_comparison.png
+│       ├── encryption_speed_comparison.png
+│       └── decryption_speed_comparison.png
 │
 ├── BENCHMARK.md
 ├── BENCHMARK_OPT.md
+├── BENCHMARK_FINAL_OPT.md
 └── README.md
 ```
 
@@ -211,6 +224,11 @@ Completed:
 * Performance analysis
 * OCaml optimization study
 * Result and graph generation
+* OCaml Int32-to-native-int optimization
+* GC allocation elimination
+* Lookup-table optimization
+* Final OCaml vs C performance comparison
+* Optimization benchmark automation
 
 Planned:
 
@@ -223,7 +241,31 @@ Planned:
 
 ## Results Summary
 
+Final optimized OCaml implementation achieved performance comparable to
+and in several benchmark runs slightly exceeding the reference C
+implementation while reducing OCaml minor collections from 1208 to 8
+and minor words from over 314 million to approximately 3.4 thousand.
+
 Detailed benchmark results, optimization history, graphs, and analysis are available in:
 
 - BENCHMARK.md
 - BENCHMARK_OPT.md
+
+## Optimization Methodology
+
+The optimization process focused on identifying runtime overheads in
+the translated OCaml implementation through benchmarking and GC
+analysis.
+
+Techniques investigated included:
+
+* Array bounds-check elimination
+* Byte extraction simplification
+* State-value caching experiments
+* put_u32 optimization
+* Int32-to-native-int conversion
+* Round-key conversion to native integers
+* Lookup-table conversion to native integers
+
+Both successful and unsuccessful optimization attempts are documented
+in BENCHMARK_FINAL_OPT.md.
