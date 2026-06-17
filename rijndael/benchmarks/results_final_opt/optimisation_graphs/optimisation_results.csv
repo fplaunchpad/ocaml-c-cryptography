@@ -1,0 +1,8 @@
+Optimization,EncryptSpeed,DecryptSpeed
+Baseline Optimized OCaml,50.21,47.74
+Array.unsafe_get,83.33,87.89
+Byte Simplification,88.77,94.24
+State Cache Experiment,78.08,87.50
+put_u32 Optimization,98.91,92.16
+Int32 to int (rk conversion),119.97,122.80
+Final Table Conversion,164.74,151.74
