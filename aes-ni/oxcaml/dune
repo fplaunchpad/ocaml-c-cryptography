@@ -1,0 +1,12 @@
+(executables
+ (names benchmark_aesni)
+ (modules aesni benchmark_aesni)
+ (libraries unix)
+ (modes native)
+ (foreign_stubs
+  (language c)
+  (names aesni_stubs)
+  (flags (:standard -maes -O3))))
+
+(copy_files ../c/aesni.c)
+(copy_files ../c/aesni.h)
