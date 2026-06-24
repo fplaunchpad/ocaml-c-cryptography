@@ -254,6 +254,16 @@ OxCaml SIMD is slower than plain OCaml C-bindings because the original OCaml cal
 
 ---
 
+## Future Work
+
+The optimized AES implementation relies on AES-NI instructions such as `AESENC`, `AESDEC`, `AESKEYGENASSIST`, and related operations. While an FFI-based approach using C stubs can expose these instructions to OxCaml, it ultimately relies on external C code and does not provide a native OxCaml implementation.
+
+A more interesting direction would be to extend OxCaml itself with support for AES-specific SIMD operations. This could involve exposing AES-NI instructions as native SIMD primitives and, ultimately, adding compiler support so that AES operations are lowered directly to the corresponding hardware instructions during code generation.
+
+Such an extension would enable a fairer comparison between native OxCaml and optimized C implementations, and would help evaluate how closely OxCaml can approach hardware-accelerated AES performance without relying on external C bindings.
+
+---
+
 ## References
 
 - AES-NI implementation: [Cryptokit by Xavier Leroy (INRIA)](https://github.com/xavierleroy/cryptokit)
