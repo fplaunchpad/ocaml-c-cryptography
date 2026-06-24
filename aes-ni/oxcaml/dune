@@ -3,6 +3,7 @@
  (modules aesni benchmark_aesni)
  (libraries unix)
  (modes native)
+ (ocamlopt_flags (:standard -extension simd_beta))
  (foreign_stubs
   (language c)
   (names aesni_stubs)

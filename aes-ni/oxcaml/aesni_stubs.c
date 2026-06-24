@@ -6,6 +6,7 @@
 /* Pull in the AES-NI implementation (copied to build dir via dune). */
 #include "aesni.c"
 
+#include <assert.h>
 #include <caml/mlvalues.h>
 #include <caml/alloc.h>
 #include <caml/memory.h>
@@ -78,3 +79,52 @@ CAMLprim value caml_aesni_check(value v_unit)
     (void)v_unit;
     return Val_int(aesni_check_available());
 }
+
+/* ---- Raw AES-NI instructions for OxCaml SIMD ----------------------------
+   OxCaml passes/returns (int64x2[@unboxed]) in XMM registers (System V AMD64 ABI).
+   __m128i matches that convention exactly. Never allocate, never touch GC. */
+
+__m128i caml_aesni_aesenc(__m128i state, __m128i key) {
+    return _mm_aesenc_si128(state, key);
+}
+__m128i caml_aesni_aesenclast(__m128i state, __m128i key) {
+    return _mm_aesenclast_si128(state, key);
+}
+__m128i caml_aesni_aesdec(__m128i state, __m128i key) {
+    return _mm_aesdec_si128(state, key);
+}
+__m128i caml_aesni_aesdeclast(__m128i state, __m128i key) {
+    return _mm_aesdeclast_si128(state, key);
+}
+__m128i caml_aesni_aesimc(__m128i key) {
+    return _mm_aesimc_si128(key);
+}
+
+/* imm8 must be compile-time constant in C — enumerate all rcon values
+   used by AES-128 / 192 / 256 key expansion. */
+__m128i caml_aesni_keygenassist(intnat imm8, __m128i key) {
+    switch ((unsigned char)imm8) {
+    case 0x00: return _mm_aeskeygenassist_si128(key, 0x00);
+    case 0x01: return _mm_aeskeygenassist_si128(key, 0x01);
+    case 0x02: return _mm_aeskeygenassist_si128(key, 0x02);
+    case 0x04: return _mm_aeskeygenassist_si128(key, 0x04);
+    case 0x08: return _mm_aeskeygenassist_si128(key, 0x08);
+    case 0x10: return _mm_aeskeygenassist_si128(key, 0x10);
+    case 0x1b: return _mm_aeskeygenassist_si128(key, 0x1b);
+    case 0x20: return _mm_aeskeygenassist_si128(key, 0x20);
+    case 0x36: return _mm_aeskeygenassist_si128(key, 0x36);
+    case 0x40: return _mm_aeskeygenassist_si128(key, 0x40);
+    case 0x55: return _mm_aeskeygenassist_si128(key, 0x55);
+    case 0x80: return _mm_aeskeygenassist_si128(key, 0x80);
+    default:   __builtin_unreachable();
+    }
+}
+
+/* ---- Stub symbols for OxCaml [@@builtin] ops ----------------------------
+   Compiler inlines these as SIMD instructions; linker still needs the symbol. */
+#define BUILTIN(name) void name() { assert(0); }
+BUILTIN(caml_vec128_unreachable)
+BUILTIN(caml_sse_vec128_xor)
+BUILTIN(caml_sse_vec128_shuffle_32)
+BUILTIN(caml_sse2_vec128_shift_left_bytes)
+BUILTIN(caml_sse2_vec128_shuffle_64)
