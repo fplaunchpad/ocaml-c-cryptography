@@ -286,19 +286,19 @@ AES-NI is **~7–8× faster** than optimized software AES. The hardware eliminat
 
 ### Figure 1: Encryption Time
 
-![Encryption Time](results/encryption_time_comparison.png)
+![Encryption Time](benchmarks/results/encryption_time_comparison.png)
 
 ### Figure 2: Decryption Time
 
-![Decryption Time](results/decryption_time_comparison.png)
+![Decryption Time](benchmarks/results/decryption_time_comparison.png)
 
 ### Figure 3: Encryption Throughput
 
-![Encryption Throughput](results/encryption_speed_comparison.png)
+![Encryption Throughput](benchmarks/results/encryption_speed_comparison.png)
 
 ### Figure 4: Decryption Throughput
 
-![Decryption Throughput](results/decryption_speed_comparison.png)
+![Decryption Throughput](benchmarks/results/decryption_speed_comparison.png)
 
 ---
 
