@@ -22,6 +22,7 @@ benchmarks/input_*.txt
 
 # Secret key
 benchmarks/key.txt
+benchmarks/nonce.txt
 
 # Editor files
 *~

@@ -1,0 +1,5 @@
+(executables
+ (names benchmark_chacha20)
+ (modules chacha20 benchmark_chacha20)
+ (libraries unix)
+ (modes native))
