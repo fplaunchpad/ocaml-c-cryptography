@@ -1,0 +1,33 @@
+# C binaries
+benchmark_chacha20
+*.out
+*.exe
+
+# OCaml build files
+_build/
+*.cmi
+*.cmo
+*.cmx
+*.o
+*.a
+*.cma
+*.cmxa
+*.annot
+*.byte
+*.native
+.dune/
+
+# Benchmark inputs
+benchmarks/input_*.txt
+
+# Secret key
+benchmarks/key.txt
+
+# Editor files
+*~
+*.swp
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
