@@ -1,5 +1,6 @@
 # C binaries
 benchmark_chacha20
+benchmark_chacha20_simd
 *.out
 *.exe
 
