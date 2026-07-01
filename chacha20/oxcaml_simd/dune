@@ -1,0 +1,25 @@
+; Shared library: compiles the SIMD implementation + C linker stubs once.
+; (wrapped false) exposes the module as Chacha20_simd without a lib namespace.
+(library
+ (name chacha20_simd_lib)
+ (wrapped false)
+ (modules chacha20_simd)
+ (modes native)
+ (ocamlopt_flags (:standard -extension simd_beta))
+ (foreign_stubs (language c) (names simd_stubs)))
+
+; Test runner: links the library (top-level assertions run at initialisation).
+(executable
+ (name chacha20_simd_tests)
+ (modules chacha20_simd_tests)
+ (libraries chacha20_simd_lib)
+ (modes native)
+ (ocamlopt_flags (:standard -extension simd_beta)))
+
+; Benchmark: same interface as the C and scalar OCaml benchmarks.
+(executable
+ (name benchmark_chacha20_simd)
+ (modules benchmark_chacha20_simd)
+ (libraries chacha20_simd_lib unix)
+ (modes native)
+ (ocamlopt_flags (:standard -extension simd_beta)))
